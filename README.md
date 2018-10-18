@@ -207,9 +207,10 @@ DeltaO2Ar <- ((Everything7$OxygenConc/Everything7$ArgonConc)/(O2Sat/ArSat)-1)
 
 #NCP
 
-NCP5min <- KO2mper5min*O2Sat*DeltaO2Ar
+NCP5min <- KO2mper5min*O2Sat*1000*DeltaO2Ar #the 1000 here converts O2 at saturation from umol/kg to umol/m3 
 
 NCP5min <- NCP5min[2141:7652] #This reflects time when the MIMS was working well
+#Units in umol/m2/5min
 
 NCP5min.splined <- na.spline(NCP5min)
 
@@ -219,8 +220,7 @@ cutpoints<-seq(1,length(NCP5min.splined),by=288)
 categories<-findInterval(1:length(NCP5min),cutpoints)
 
 NCP24<-tapply(NCP5min.splined,categories,sum)
-
-
+#Units in umol/m2/d
 
 #Making some files
 
