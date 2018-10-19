@@ -1,4 +1,4 @@
-# NCP
+# NCP R Code
 #Some script to calculate NCP based on MIMS data
 
 Data<-read.csv("O2ArSept2018.csv",header=T,na.strings="NA")
