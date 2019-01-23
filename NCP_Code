@@ -1,5 +1,7 @@
 # NCP R Code
 #Some script to calculate NCP based on MIMS data
+#This is for September (matters for length of various vectors)
+#Note that the start of this data set occurs on September 1 at 12:02 am, so the plots at the end that cut every 288 points cut at ~midnight each night
 
 Data<-read.csv("O2ArSept2018.csv",header=T,na.strings="NA")
 ls(Data)
@@ -339,16 +341,22 @@ NCP5min_NonSteadyState.splined <- na.spline(NCP5min_NonSteadyState[1:7650])
 NCP5min_NonSteadyState_smoothed <- smooth(NCP5min_NonSteadyState.splined)
 
 
+#Calculate moving average with window 144 (12 hours) and make first and last value as NA (to ensure identical length of vectors)
+m.av<-rollmean(NCP5min_NonSteadyState, 144, fill = list(NA, NULL, NA))
+
+
 #Summing NCP for 24 hours (from midnight to midnight)
 cutpoints <- seq(1,length(NCP5min_NonSteadyState.splined),by=288)
 
 categories <- findInterval(1:length(NCP5min_NonSteadyState.splined),cutpoints)
 
-NCP24_NonSteadyState <- tapply(NCP5min_NonSteadyState.splined,categories,sum)
+NCP24_NonSteadyState <- tapply(NCP5min_NonSteadyState[1:7650],categories,sum)
 
 NCP24_NonSteadyState_smoothedAfter <- tapply(smooth(NCP5min_NonSteadyState.splined),categories,sum)
 
 NCP24_NonSteadyState_smoothedBefore <- tapply(NCP5min_NonSteadyState_smoothed,categories,sum)
+
+NCP24_NonSteadyState_m.av <- tapply(m.av[1:7650],categories,sum)
 
 
 #Do this stuff for making either Non-Steady State or Steady State Stuff (it just takes the daily mean for all the other measurements)
@@ -391,11 +399,11 @@ X2.methyl.3.buten.2.ol24 <- tapply(na.spline(Everything31$X2.methyl.3.buten.2.ol
 
 #Making some files
 
-fivemin_means_and_NCP_NonSteadyState <- cbind(Everything31[1:7650,1:39],NCP5min_NonSteadyState[1:7650],NCP5min_NonSteadyState_smoothed[1:7650])
+fivemin_means_and_NCP_NonSteadyState <- cbind(Everything31[1:7650,1:39],NCP5min_NonSteadyState[1:7650],NCP5min_NonSteadyState_smoothed[1:7650],m.av[1:7650])
 
 #write.csv(fivemin_means_and_NCP_NonSteadyState, "fivemin_means_and_NCP_NonSteadyState_Sept.csv")
 
-NCP_daily_NonSteadyState <- cbind(Date24,NCP24_NonSteadyState,NCP24_NonSteadyState_smoothedAfter,NCP24_NonSteadyState_smoothedBefore,
+NCP_daily_NonSteadyState <- cbind(Date24,NCP24_NonSteadyState,NCP24_NonSteadyState_smoothedAfter,NCP24_NonSteadyState_smoothedBefore,NCP24_NonSteadyState_m.av,
                    Temp24,Salinity24,Chlorophyll24,Pressure24,
                    Windspeed24,Oxygen24,Argon24,Methane24,NitrousOxide24,
                    NitricOxide24,TempMIMS24,Water24,Acetaldehyde24,
@@ -453,7 +461,8 @@ NCP_daily_SteadyState <- as.data.frame(NCP_daily_SteadyState)
 #write.csv(NCP_daily_SteadyState, "Daily_NCP_SteadyState_Sept.csv")
 
 
-###################################################
+#####################################################################
+
 #Some plots
 Day24<-format(as.Date(Date24), "%m/%d/%Y")
 
@@ -461,18 +470,25 @@ barplot(NCP_daily_NonSteadyState$NCP24_NonSteadyState, col="blue", yaxt="n", xla
 axis(2,cex.axis=1.5)
 mtext(side=2, line=3, "NCP, mmol/m2/d", font = 2, cex=1.5)
 
-NCP_daily_NonSteadyState$NCP24_NonSteadyState[7] <- 0
-NCP_daily_NonSteadyState$NCP24_NonSteadyState[8] <- 0
-
-barplot(NCP_daily_NonSteadyState$NCP24_NonSteadyState, col="blue", yaxt="n", xlab="", ylab="", names.arg = Day24, ylim = c(-300,200), las = 2)
+barplot(NCP_daily_NonSteadyState$NCP24_NonSteadyState, col="blue", yaxt="n", xlab="", ylab="", names.arg = Day24, ylim = c(-350,150), las = 2)
 axis(2,cex.axis=1.5)
 mtext(side=2, line=3, "NCP, mmol/m2/d", font = 2, cex=1.5)
+grid(nx=29, ny = 0, lty = 1, lwd =1, col = "gray")
 
 
-NCPTimes<-as.Date(fivemin_means_and_NCP$fiveMin, format = "%Y-%m-%d")
+NCPTimes<-as.Date(fivemin_means_and_NCP_NonSteadyState$fiveMin, format = "%Y-%m-%d")
 
-barplot(fivemin_means_and_NCP_NonSteadyState$'NCP5min_NonSteadyState[1:7650]', col="blue", yaxt="n", xaxt="n", xlab="", ylab="", ylim = c(-45,45))
+line.segments <- seq(from = 0, to = 7650, by = 288)
+
+plot(fivemin_means_and_NCP_NonSteadyState$`NCP5min_NonSteadyState[1:7650]`, col="blue", yaxt="n", xaxt="n", xlab="", ylab="", ylim = c(-5,5))
 axis(2,cex.axis=1.5)
 mtext(side=2, line=3, "NCP, mmol/m2/5min", font = 2, cex=1.5)
-grid(nx = 28, ny = 0, lty = 1, lwd = 1, col = "blue")
+abline(v=c(line.segments), col = 'black')
+points(m.av,type='l', col = 'red')
+
+plot(fivemin_means_and_NCP_NonSteadyState$`NCP5min_NonSteadyState[1:7650]`, col="blue", yaxt="n", xaxt="n", xlab="", ylab="", ylim = c(-0.5,0.5))
+axis(2,cex.axis=1.5)
+mtext(side=2, line=3, "NCP, mmol/m2/5min", font = 2, cex=1.5)
+abline(v=c(line.segments), col = 'black')
+points(m.av,type='l', col = 'red')
 
