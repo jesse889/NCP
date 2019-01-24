@@ -1,4 +1,5 @@
-#NCP code for December based on O2/Ar method (the month matters due to the length of various vectors and matching them up)
+#Code for calculating NCP based on O2/Ar method
+#This code is for December (matters for the length of certain vectors)
 #Note that the saturation ratios for O2 and Ar have changed due to a new 100% standard that was run
 
 Data<-read.csv("O2ArDec2018.csv",header=T,na.strings="NA")
