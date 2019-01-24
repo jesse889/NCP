@@ -1,0 +1,498 @@
+#NCP code for December based on O2/Ar method (the month matters due to the length of various vectors and matching them up)
+#Note that the saturation ratios for O2 and Ar have changed due to a new 100% standard that was run
+
+Data<-read.csv("O2ArDec2018.csv",header=T,na.strings="NA")
+ls(Data)
+Data<-Data[573:length(Data$Date),]
+
+###################################################################
+#Prep stuff to get 5 minute averages and data all paired up
+
+Data$Day <- as.POSIXct(Data$Date, format="%m/%d/%Y %H:%M")
+
+Data1<-Data[complete.cases(Data$Oxygen),]
+
+#To see what cut does:
+cut(Data1$Day, breaks="5 min")
+
+#Applying cut:
+Oxygenmeans <- aggregate(Data1["Oxygen"], 
+                   list(fiveMin=cut(Data1$Day, "5 mins")),
+                   mean)
+
+Argonmeans <- aggregate(Data1["Argon"], 
+                         list(fiveMin=cut(Data1$Day, "5 mins")),
+                         mean)
+
+
+Methanemeans <- aggregate(Data1["Methane"],
+                          list(fiveMin=cut(Data1$Day, "5 mins")),
+                          mean)
+
+
+NitrousOxidemeans <- aggregate(Data1["Nitrous.Oxide"],
+                          list(fiveMin=cut(Data1$Day, "5 mins")),
+                          mean)
+
+
+NitricOxidemeans <- aggregate(Data1["Nitric.oxide"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+
+TempMIMSmeans <- aggregate(Data1["Temperature.Corrected"], 
+                        list(fiveMin=cut(Data1$Day, "5 mins")),
+                        mean)
+
+
+Watermeans <- aggregate(Data1["Water"],
+                        list(fiveMin=cut(Data1$Day, "5 mins")),
+                        mean)
+
+Acetaldehydemeans <- aggregate(Data1["Acetaldehyde"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Acetonemeans <- aggregate(Data1["Acetone"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Benzenemeans <- aggregate(Data1["Benzene"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Bromomethanemeans <- aggregate(Data1["Bromomethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Carbonyl.sulfidemeans <- aggregate(Data1["Carbonyl.sulfide"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Chloromethanemeans <- aggregate(Data1["Chloromethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Dibromomethanemeans <- aggregate(Data1["Dibromomethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+DMSmeans <- aggregate(Data1["DMS"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Ethylchloridemeans <- aggregate(Data1["Ethylchloride"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Iodomethanemeans <- aggregate(Data1["Iodomethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Isoprenemeans <- aggregate(Data1["Isoprene"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Methyl.Alcoholmeans <- aggregate(Data1["Methyl.Alcohol"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Methylene.Chloridemeans <- aggregate(Data1["Methylene.Chloride"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Nitrogen.dioxidemeans <- aggregate(Data1["Nitrogen.dioxide"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Tetrachloroethylenemeans <- aggregate(Data1["Tetrachloroethylene"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Toluenemeans <- aggregate(Data1["Toluene"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Tribromomethanemeans <- aggregate(Data1["Tribromomethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Trichloroethylenemeans <- aggregate(Data1["Trichloroethylene"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+Trichloromethanemeans <- aggregate(Data1["Trichloromethane"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+X2.methyl.3.buten.2.olmeans <- aggregate(Data1["X2.methyl.3.buten.2.ol"],
+                               list(fiveMin=cut(Data1$Day, "5 mins")),
+                               mean)
+
+
+#These are in ppm
+
+#Import temp and salnity (note: have to have minute of first time match the minute of the MIMs file so that 5 minute match up can work)
+#HAVE TO PUT SCCOOS DATE INTO PST
+
+SCCOOS<-read.csv("Temp_Salinity_Dec.csv",header=T,na.strings="NA")
+
+UTCtime<-as.POSIXct(SCCOOS$timeUTC, tz="UTC")
+SCCOOS$timePST<-format(UTCtime, tz="America/Los_Angeles", usetz=TRUE)
+
+SCCOOS$timePST <- as.POSIXct(SCCOOS$timePST, format="%Y-%m-%d %H:%M")
+
+SCCOOS2 <- data.frame("timePST"=c(SCCOOS$timePST),"pressure"=c(SCCOOS$pressure),"temperature"=c(SCCOOS$temperature),"chlorophyll"=c(SCCOOS$chlorophyll),"salinity"=c(SCCOOS$salinity))
+
+SCCOOS2 <- SCCOOS2[2999:14000,]
+
+library("zoo")
+SCCOOS.zoo <- zoo(SCCOOS2[,-1],SCCOOS2[,1])
+
+
+SCCOOS2 <- merge(SCCOOS.zoo, zoo(,seq(start(SCCOOS.zoo), end(SCCOOS.zoo), by="min")), all=TRUE)
+
+SCCOOS2 <- as.data.frame(SCCOOS2)
+
+SCCOOS2$pressure <- na.spline(SCCOOS2$pressure)
+SCCOOS2$temperature <- na.spline(SCCOOS2$temperature)
+SCCOOS2$chlorophyll <- na.spline(SCCOOS2$chlorophyll)
+SCCOOS2$salinity <- na.spline(SCCOOS2$salinity)
+SCCOOS2$timePST <- rownames(SCCOOS2)
+SCCOOS2$timePST <- as.POSIXct(SCCOOS2$timePST, format="%Y-%m-%d %H:%M")
+
+SCCOOS2<-SCCOOS2[1:length(SCCOOS2$timePST),]
+
+#Import wind
+
+Wind <- read.csv("Wind_Dec.csv",header=T,na.strings="NA")
+
+GMTtime <- as.POSIXct(Wind$TimeGMT, tz="GMT")
+Wind$timePST<-format(GMTtime, tz="America/Los_Angeles", usetz=TRUE)
+
+Wind$timePST <- as.POSIXct(Wind$timePST, format="%Y-%m-%d %H:%M")
+
+Wind<-Wind[1:9987,]
+
+Wind2 <- data.frame("TimePST"=c(Wind$timePST),"WSPD"=c(Wind$WSPD),"AIRTMP"=c(Wind$ATMP),"WTRTMP"=c(Wind$WTMP),"WDIR"=c(Wind$WDIR),"PRESS"=c(Wind$PRES))
+
+Wind.zoo <- zoo(Wind2[,-1],Wind2[,1])
+
+Wind2 <- merge(Wind.zoo, zoo(,seq(start(Wind.zoo), end(Wind.zoo), by="min")), all=TRUE)
+
+Wind2 <- as.data.frame(Wind2)
+
+Wind2$AIRTMP <- na.spline(Wind2$AIRTMP)
+Wind2$PRESS <- na.spline(Wind2$PRES)
+Wind2$WDIR <- na.spline(Wind2$WDIR)
+Wind2$WSPD <- na.spline(Wind2$WSPD)
+Wind2$WTRTMP <- na.spline(Wind2$WTRTMP)
+Wind2$timePST <- rownames(Wind2)
+Wind2$timePST <- as.POSIXct(Wind2$timePST, format="%Y-%m-%d %H:%M")
+
+Wind2<-Wind2[9:length(Wind2$timePST),]
+
+#Average of 5 mins
+
+Tempmeans <- aggregate(SCCOOS2["temperature"], 
+                         list(fiveMin=cut(SCCOOS2$timePST, "5 mins")),
+                         mean)
+
+Salinitymeans <- aggregate(SCCOOS2["salinity"], 
+                        list(fiveMin=cut(SCCOOS2$timePST, "5 mins")),
+                        mean)
+
+Chlorophyllmeans <- aggregate(SCCOOS2["chlorophyll"],
+                        list(fiveMin=cut(SCCOOS2$timePST, "5 mins")),
+                        mean)
+
+Pressuremeans <- aggregate(SCCOOS2["pressure"],
+                        list(fiveMin=cut(SCCOOS2$timePST, "5 mins")),
+                        mean)
+
+Windspeedmeans <- aggregate(Wind2["WSPD"],
+                        list(fiveMin=cut(Wind2$timePST, "5 mins")),
+                        mean)
+
+AirPressmeans <- aggregate(Wind2["PRESS"],
+                           list(fiveMin=cut(Wind2$timePST, "5 mins")),
+                           mean)
+
+AirTempmeans <- aggregate(Wind2["AIRTMP"],
+                           list(fiveMin=cut(Wind2$timePST, "5 mins")),
+                           mean)
+
+
+
+#Merge SCCOOS with Data data.frame
+
+Everything<-merge(Salinitymeans,Tempmeans,by="fiveMin",all=TRUE)
+Everything2<-merge(Everything,Argonmeans,by="fiveMin",all=TRUE)
+Everything3<-merge(Everything2,Oxygenmeans,by="fiveMin",all=TRUE)
+Everything4<-merge(Everything3,TempMIMSmeans,by="fiveMin",all=TRUE)
+Everything5<-merge(Everything4,Watermeans,by="fiveMin",all=TRUE)
+Everything6<-merge(Everything5,Windspeedmeans,by="fiveMin",all=TRUE) #In m/s
+Everything7<-merge(Everything6,Chlorophyllmeans,by="fiveMin",all=TRUE)
+Everything8<-merge(Everything7,Acetaldehydemeans,by="fiveMin",all=TRUE)
+Everything9<-merge(Everything8,Acetonemeans,by="fiveMin",all=TRUE)
+Everything10<-merge(Everything9,Benzenemeans,by="fiveMin",all=TRUE)
+Everything11<-merge(Everything10,Bromomethanemeans,by="fiveMin",all=TRUE)
+Everything12<-merge(Everything11,Carbonyl.sulfidemeans,by="fiveMin",all=TRUE)
+Everything13<-merge(Everything12,Chloromethanemeans,by="fiveMin",all=TRUE)
+Everything14<-merge(Everything13,Dibromomethanemeans,by="fiveMin",all=TRUE)
+Everything15<-merge(Everything14,DMSmeans,by="fiveMin",all=TRUE)
+Everything16<-merge(Everything15,Ethylchloridemeans,by="fiveMin",all=TRUE)
+Everything17<-merge(Everything16,Iodomethanemeans,by="fiveMin",all=TRUE)
+Everything18<-merge(Everything17,Isoprenemeans,by="fiveMin",all=TRUE)
+Everything19<-merge(Everything18,Methanemeans,by="fiveMin",all=TRUE)
+Everything20<-merge(Everything19,Methyl.Alcoholmeans,by="fiveMin",all=TRUE)
+Everything21<-merge(Everything20,Methylene.Chloridemeans,by="fiveMin",all=TRUE)
+Everything22<-merge(Everything21,NitricOxidemeans,by="fiveMin",all=TRUE)
+Everything23<-merge(Everything22,Nitrogen.dioxidemeans,by="fiveMin",all=TRUE)
+Everything24<-merge(Everything23,NitrousOxidemeans,by="fiveMin",all=TRUE)
+Everything25<-merge(Everything24,Tetrachloroethylenemeans,by="fiveMin",all=TRUE)
+Everything26<-merge(Everything25,Toluenemeans,by="fiveMin",all=TRUE)
+Everything27<-merge(Everything26,Tribromomethanemeans,by="fiveMin",all=TRUE)
+Everything28<-merge(Everything27,Trichloroethylenemeans,by="fiveMin",all=TRUE)
+Everything29<-merge(Everything28,Trichloromethanemeans,by="fiveMin",all=TRUE)
+Everything30<-merge(Everything29,X2.methyl.3.buten.2.olmeans,by="fiveMin",all=TRUE)
+Everything31<-merge(Everything30,Pressuremeans,by="fiveMin",all=TRUE)
+
+
+Everything31<-Everything31[1:8664,]
+
+
+
+Everything31$TS <- log((298.15-Everything31$Temperature.Corrected)/(273.15+Everything31$Temperature.Corrected))
+
+AverageWater <- mean(na.omit(Everything31$Water))
+Everything31$WaterCorrection <- AverageWater/Everything31$Water
+
+Everything31$ArgonCorr <- Everything31$Argon/Everything31$WaterCorrection
+
+Everything31$OxygenCorr <- Everything31$Oxygen/Everything31$WaterCorrection
+
+ls(Everything31)
+
+
+#Calculate Oxygen at Saturation (These saturations come from Hamme and Emerson 2004 and Garcia and Gordon 1992):
+
+#Don't need to actually calculate ArSat, but this is here if interested
+#ArSat <- 2.71828^(2.79150 + 3.17609*(Everything31$TS) + 4.13116*(Everything31$TS^2) + 4.90379*(Everything31$TS^3) + Everything31$salinity*(-0.00696233 + -0.00766670*(Everything31$TS) - 0.0116888*(Everything31$TS^2)))
+
+O2Sat <- 2.71828^(5.80871 + 3.20291*(Everything31$TS) + 4.17887*(Everything31$TS^2) + 5.10006*(Everything31$TS^2) + 5.10006*(Everything31$TS^3) -0.0986643*(Everything31$TS^4) + 3.80369*(Everything31$TS^5) + Everything31$salinity*(-0.00701577 - 0.00770028*(Everything31$TS) - 0.0113864*(Everything31$TS^2) - 0.00951519*(Everything31$TS^3)) - 0.000000275915*(Everything31$salinity^2))
+#Units for ArSat and O2Sat are in umol/kg or mmol/m3
+
+
+#Figuring out Oxygen and Argon concentraions relative to what it would be at 100% (based on 100% calibrations conducted periodically--using oxygen and argon saturated water)
+#This keeps oxygen and argon in ppm but divides out the units so you just have a ratio
+Everything31$OxygenConcRatio <- Everything31$OxygenCorr/15419.65
+
+Everything31$ArgonConcRatio <- Everything31$ArgonCorr/790.88
+
+
+#Convert Wind speed (m/s) to 10m above sea surface using Donelan 1990
+
+ActualHeightToSurface=17.5 #This refelcts Station LJAC1-9410230-La Jolla, CA (8.2m above site elevation and site elevation 9.3m above mean sea level)
+
+U10<-Everything31$WSPD*(1+(((1.3*(10^-3))^0.5)/0.4)*log(10/(ActualHeightToSurface)))
+
+
+#Estimate depth of the pump (it is approximately 5m down but that changes with tide, which can be tracked by the pressure sensor which is at a slightly different depth)
+
+Depth <- 5*(Everything31$pressure/mean(na.omit(Everything31$pressure)))
+#Units are in m
+
+
+#Have to calculate gas transfer velocity (aka gas transfer coefficient or piston velocity) for CO2 (k660)--There are many different equations for this but used McGillis et al. (2001) as it covered a wide range of windspeeds and does not take k to zero at low wind speeds (See Wanninkhof et al. 2009)
+#K units are cm/hr and U10 units are in m/s
+
+K660<-3.3+0.026*((U10)^3)
+
+#Calculate Schmidt number (the kiematic viscosity of water divided by the diffusion coefficient of the gas--a dimensionless number) for O2 in seawater (Wanninkhof 1992)
+#T=Temp in degress Celsius
+
+ScO2<-1953.4-128*Everything31$temperature+3.9918*(Everything31$temperature^2)-0.050091*(Everything31$temperature^3)
+
+#Convert K660 to KO2 using ScO2 and 660 (the Schmitt number for CO2 in seawter)
+
+FUNK660<-function(U10){if(U10<1.9999999999){2/3}else{1/2}}
+
+number<-sapply(U10, FUNK660)
+
+KO2<-((ScO2/660)^(-1*number))*K660 #Units are cm/hr so will have to change to m/5min probably
+
+KO2mper5min<-KO2/(12*100) #Units are now in m/5min
+
+
+##############################################################################
+#Non-Steady State Estimation of NCP
+
+#Calcuate Biological Oxygen Saturation
+
+DeltaO2Ar <- (Everything31$OxygenConcRatio/Everything31$ArgonConcRatio-1)
+
+O2Bio <- DeltaO2Ar*O2Sat
+#In mmol/m3
+
+
+#NCP
+library("dplyr")
+
+NCP5min_NonSteadyState <- Depth*(lead(O2Bio,n=1L)-O2Bio)/5 + KO2mper5min*(lead(O2Bio,n=1L))
+#Units in mmol/m2/5min
+
+NCP5min_NonSteadyState.splined <- na.spline(NCP5min_NonSteadyState)
+
+NCP5min_NonSteadyState_smoothed <- smooth(NCP5min_NonSteadyState.splined)
+
+
+#Calculate moving average with window 144 (12 hours) and make first and last value as NA (to ensure identical length of vectors)
+m.av<-rollmean(NCP5min_NonSteadyState, 144, fill = list(NA, NULL, NA))
+
+
+#Summing NCP for 24 hours (from midnight to midnight)
+cutpoints <- seq(1,length(NCP5min_NonSteadyState.splined),by=288)
+
+categories <- findInterval(1:length(NCP5min_NonSteadyState.splined),cutpoints)
+
+NCP24_NonSteadyState <- tapply(NCP5min_NonSteadyState,categories,sum)
+
+NCP24_NonSteadyState_smoothedAfter <- tapply(smooth(NCP5min_NonSteadyState.splined),categories,sum)
+
+NCP24_NonSteadyState_smoothedBefore <- tapply(NCP5min_NonSteadyState_smoothed,categories,sum)
+
+NCP24_NonSteadyState_mv.a <- tapply(m.av,categories,sum)
+
+#Do this stuff for making either Non-Steady State or Steady State Stuff (it just takes the daily mean for all the other measurements)
+DateForDailyFile<-Everything31$fiveMin
+
+Date24<-DateForDailyFile[seq(1,length(DateForDailyFile),288)]
+
+Temp24 <- tapply(na.spline(Everything31$temperature),categories,mean)
+Salinity24 <- tapply(na.spline(Everything31$salinity),categories,mean)
+Chlorophyll24 <- tapply(na.spline(Everything31$chlorophyll),categories,mean)
+Pressure24 <- tapply(na.spline(Everything31$pressure),categories,mean)
+Windspeed24 <- tapply(na.spline(Everything31$WSPD),categories,mean)
+Oxygen24 <- tapply(na.spline(Everything31$Oxygen),categories,mean)
+Argon24 <- tapply(na.spline(Everything31$Argon),categories,mean)
+Methane24 <- tapply(na.spline(Everything31$Methane),categories,mean)
+NitrousOxide24 <- tapply(na.spline(Everything31$Nitrous.Oxide),categories,mean)
+NitricOxide24 <- tapply(na.spline(Everything31$Nitric.oxide),categories,mean)
+TempMIMS24 <- tapply(na.spline(Everything31$Temperature.Corrected),categories,mean)
+Water24 <- tapply(na.spline(Everything31$Water),categories,mean)
+Acetaldehyde24 <- tapply(na.spline(Everything31$Acetaldehyde),categories,mean)
+Acetone24 <- tapply(na.spline(Everything31$Acetone),categories,mean)
+Benzene24 <- tapply(na.spline(Everything31$Benzene),categories,mean)
+Bromomethane24 <- tapply(na.spline(Everything31$Bromomethane),categories,mean)
+Carbonyl.sulfide24 <- tapply(na.spline(Everything31$Carbonyl.sulfide),categories,mean)
+Chloromethane24 <- tapply(na.spline(Everything31$Chloromethane),categories,mean)
+Dibromomethane24 <- tapply(na.spline(Everything31$Dibromomethane),categories,mean)
+DMS24 <- tapply(na.spline(Everything31$DMS),categories,mean)
+Ethylchloride24 <- tapply(na.spline(Everything31$Ethylchloride),categories,mean)
+Iodomethane24 <- tapply(na.spline(Everything31$Iodomethane),categories,mean)
+Isoprene24 <- tapply(na.spline(Everything31$Isoprene),categories,mean)
+Methyl.Alcohol24 <- tapply(na.spline(Everything31$Methyl.Alcohol),categories,mean)
+Methylene.Chloride24 <- tapply(na.spline(Everything31$Methylene.Chloride),categories,mean)
+Nitrogen.dioxide24 <- tapply(na.spline(Everything31$Nitrogen.dioxide),categories,mean)
+Tetrachloroethylene24 <- tapply(na.spline(Everything31$Tetrachloroethylene),categories,mean)
+Toluene24 <- tapply(na.spline(Everything31$Toluene),categories,mean)
+Tribromomethane24 <- tapply(na.spline(Everything31$Tribromomethane),categories,mean)
+Trichloroethylene24 <- tapply(na.spline(Everything31$Trichloroethylene),categories,mean)
+Trichloromethane24 <- tapply(na.spline(Everything31$Trichloromethane),categories,mean)
+X2.methyl.3.buten.2.ol24 <- tapply(na.spline(Everything31$X2.methyl.3.buten.2.ol),categories,mean)
+
+#Making some files
+
+fivemin_means_and_NCP_NonSteadyState <- cbind(Everything31[1:8664,1:39],NCP5min_NonSteadyState[1:8664],NCP5min_NonSteadyState_smoothed[1:8664],m.av[1:8664])
+
+#write.csv(fivemin_means_and_NCP_NonSteadyState, "fivemin_means_and_NCP_NonSteadyState_Dec.csv")
+
+NCP_daily_NonSteadyState <- cbind(Date24,NCP24_NonSteadyState,NCP24_NonSteadyState_smoothedAfter,NCP24_NonSteadyState_smoothedBefore,NCP24_NonSteadyState_mv.a,
+                                  Temp24,Salinity24,Chlorophyll24,Pressure24,
+                                  Windspeed24,Oxygen24,Argon24,Methane24,NitrousOxide24,
+                                  NitricOxide24,TempMIMS24,Water24,Acetaldehyde24,
+                                  Acetone24,Benzene24,Bromomethane24,Carbonyl.sulfide24,
+                                  Chloromethane24,Dibromomethane24,DMS24,Ethylchloride24,
+                                  Iodomethane24,Isoprene24,Methyl.Alcohol24,Methylene.Chloride24,
+                                  Nitrogen.dioxide24,Tetrachloroethylene24,Toluene24,Tribromomethane24,
+                                  Trichloroethylene24,Trichloromethane24,X2.methyl.3.buten.2.ol24)
+
+NCP_daily_NonSteadyState <- as.data.frame(NCP_daily_NonSteadyState)
+
+#write.csv(NCP_daily_NonSteadyState, "Daily_NCP_NonSteadyState_Dec.csv")
+
+
+#########################################################################################
+#Steady State Estimation of NCP
+
+#NCP
+NCP5min_SteadyState <- KO2mper5min*O2Sat*DeltaO2Ar #Same as KO2mper5min*O2Bio (note that all the terms are calculated the same way as above)
+#Units in mmol/m2/5min
+
+NCP5min_SteadyState.splined <- na.spline(NCP5min_SteadyState)
+
+NCP5min_SteadyState_smoothed <- smooth(NCP5min_SteadyState.splined)
+
+
+#Summing NCP for 24 hours (from midnight to midnight)
+#Note: Using the cutpoints and catergories from above
+
+NCP24_SteadyState <- tapply(NCP5min_SteadyState.splined,categories,sum)
+
+NCP24_SteadyState_smoothedAfter <- tapply(smooth(NCP5min_SteadyState.splined),categories,sum)
+
+NCP24_SteadyState_smoothedBefore <- tapply(NCP5min_SteadyState_smoothed,categories,sum)
+
+
+#Making some files
+
+fivemin_means_and_NCP_SteadyState <- cbind(Everything31[1:8664,1:39],NCP5min_SteadyState[1:8664],NCP5min_SteadyState_smoothed[1:8664])
+
+#write.csv(fivemin_means_and_NCP_SteadyState, "fivemin_means_and_NCP_SteadyState_Dec.csv")
+
+NCP_daily_SteadyState <- cbind(Date24,NCP24_SteadyState,NCP24_SteadyState_smoothedAfter,NCP24_SteadyState_smoothedBefore,
+                               Temp24,Salinity24,Chlorophyll24,Pressure24,
+                               Windspeed24,Oxygen24,Argon24,Methane24,NitrousOxide24,
+                               NitricOxide24,TempMIMS24,Water24,Acetaldehyde24,
+                               Acetone24,Benzene24,Bromomethane24,Carbonyl.sulfide24,
+                               Chloromethane24,Dibromomethane24,DMS24,Ethylchloride24,
+                               Iodomethane24,Isoprene24,Methyl.Alcohol24,Methylene.Chloride24,
+                               Nitrogen.dioxide24,Tetrachloroethylene24,Toluene24,Tribromomethane24,
+                               Trichloroethylene24,Trichloromethane24,X2.methyl.3.buten.2.ol24)
+
+NCP_daily_SteadyState <- as.data.frame(NCP_daily_SteadyState)
+
+#write.csv(NCP_daily_SteadyState, "Daily_NCP_SteadyState_Dec.csv")
+
+#############################################################
+
+#Some plots
+Day24<-format(as.Date(Date24), "%m/%d/%Y")
+
+barplot(NCP_daily_NonSteadyState$NCP24_NonSteadyState, col="blue", yaxt="n", xlab="", ylab="", names.arg = Day24)
+axis(2,cex.axis=1.5)
+mtext(side=2, line=3, "NCP, mmol/m2/d", font = 2, cex=1.5)
+
+barplot(NCP_daily_NonSteadyState$NCP24_NonSteadyState, col="blue", yaxt="n", xlab="", ylab="", names.arg = Day24, ylim = c(-60,10), las = 2)
+axis(2,cex.axis=1.5)
+mtext(side=2, line=3, "NCP, mmol/m2/d", font = 2, cex=1.5)
+grid(nx=33, ny = 0, lty = 1, lwd =1, col = "gray")
+
+
+NCPTimes<-as.Date(fivemin_means_and_NCP_NonSteadyState$fiveMin, format = "%Y-%m-%d")
+
+line.segments <- seq(from = 0, to = 8664, by = 288)
+
+plot(fivemin_means_and_NCP_NonSteadyState$`NCP5min_NonSteadyState[1:8664]`, col="blue", yaxt="n", xaxt="n", xlab="", ylab="", ylim = c(-5,5))
+axis(2,cex.axis=1.5)
+mtext(side=2, line=3, "NCP, mmol/m2/5min", font = 2, cex=1.5)
+abline(v=c(line.segments), col = 'black')
+points(m.av,type='l', col = 'red')
+
+plot(fivemin_means_and_NCP_NonSteadyState$`NCP5min_NonSteadyState[1:8664]`, col="blue", yaxt="n", xaxt="n", xlab="", ylab="", ylim = c(-0.5,0.5))
+axis(2,cex.axis=1.5)
+mtext(side=2, line=3, "NCP, mmol/m2/5min", font = 2, cex=1.5)
+abline(v=c(line.segments), col = 'black')
+points(m.av,type='l', col = 'red')
+
