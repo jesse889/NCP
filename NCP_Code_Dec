@@ -363,7 +363,7 @@ NCP24_NonSteadyState_smoothedAfter <- tapply(smooth(NCP5min_NonSteadyState.splin
 
 NCP24_NonSteadyState_smoothedBefore <- tapply(NCP5min_NonSteadyState_smoothed,categories,sum)
 
-NCP24_NonSteadyState_mv.a <- tapply(m.av,categories,sum)
+NCP24_NonSteadyState_m.av <- tapply(m.av,categories,sum)
 
 #Do this stuff for making either Non-Steady State or Steady State Stuff (it just takes the daily mean for all the other measurements)
 DateForDailyFile<-Everything31$fiveMin
@@ -409,7 +409,7 @@ fivemin_means_and_NCP_NonSteadyState <- cbind(Everything31[1:8664,1:39],NCP5min_
 
 #write.csv(fivemin_means_and_NCP_NonSteadyState, "fivemin_means_and_NCP_NonSteadyState_Dec.csv")
 
-NCP_daily_NonSteadyState <- cbind(Date24,NCP24_NonSteadyState,NCP24_NonSteadyState_smoothedAfter,NCP24_NonSteadyState_smoothedBefore,NCP24_NonSteadyState_mv.a,
+NCP_daily_NonSteadyState <- cbind(Date24,NCP24_NonSteadyState,NCP24_NonSteadyState_smoothedAfter,NCP24_NonSteadyState_smoothedBefore,NCP24_NonSteadyState_m.av,
                                   Temp24,Salinity24,Chlorophyll24,Pressure24,
                                   Windspeed24,Oxygen24,Argon24,Methane24,NitrousOxide24,
                                   NitricOxide24,TempMIMS24,Water24,Acetaldehyde24,
